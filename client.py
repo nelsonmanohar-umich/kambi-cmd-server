@@ -1,5 +1,6 @@
 import requests
 import time
+import unittest
 
 
 # valid options accepted by the server for the ls command
@@ -134,5 +135,14 @@ for i in range(1000):
         shutdown_request()
 
 
+
+
+class TestClientServer(unittest.TestCase):
+    def test_ls01(self):
+        self.assertEqual(make_request(cmd="ls", path=".", options="-h", header=False)
+
+
+if __name__ == '__main__':
+    unittest.main()
 
 

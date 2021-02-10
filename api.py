@@ -92,6 +92,7 @@ async def request_handler_function(reqid, cmdstr, ip, cmd, options, path):
             data = os_out if os_ret == 0 else os_err
             retcode = 200 if os_ret == 0 else 500
         else:
+            print("***" + f'[{cmd} references a non-existing path {path}]')
             retcode = 404
         return cmdstr, data, retcode
     else:
@@ -257,28 +258,25 @@ class EntryPoint(Resource):
         try:
             if request.args.get('cmd') is not None:
                 cmd = request.args.get('cmd')
-            else:
-                cmd = ""
-            if request.args.get('path') is not None:
-                path = request.args.get('path')
-            else:
-                path = ""
         except:
-            data = "cmd and path params not found in request"
+            data = "cmd param not found in request"
             retcode = 400
             res = self.format_response(reqid, str(cmd), str(data))
             del ServerCache.pending_reqids[reqid]
             return res, retcode
 
         try:
+            if request.args.get('path') is not None:
+                path = request.args.get('path')
+        except:
+            print("*** path param not found in request")
+
+        try:
             if request.args.get('options') is not None:
                 options = str(request.args.get('options')).strip().replace("-", "").replace(" ", "")
                 if options: options = "-" + options
-            else:
-                options = ""
         except:
             print("*** problem with parsing options")
-            options = ""
 
         try:
             ip = request.remote_addr

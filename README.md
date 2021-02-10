@@ -11,6 +11,24 @@
 
         -l -h -s -t -r -R -a -1
 
+
+# PARAMETERS
+    - 1) INPUT: (cmd executed, options, path)
+    ```
+        "cmd": "ls",
+        "options": "-lsh",
+        "path": "./TEST"
+    ```
+
+    - 2) OUTPUT: (cmd executed, request_id, output)
+    ```
+        "cmd": "ls  ",
+        "rid": "2196",
+        "out": "Try later, too many requests from ip within recent window"
+    ```
+
+
+
 # LIMITATIONS
     It imposes a number of most basic (from the hip) security checks to the command against attacks. 
     It throtles request to a maximum of nmax (100) jobs within a window of tmax (1) seconds.
