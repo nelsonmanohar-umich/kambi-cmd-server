@@ -1,24 +1,21 @@
 import requests
 import time
 import unittest
+import argparse
 
 
-# valid options accepted by the server for the ls command
+
+# documentation of the valid options accepted by the server for the ls command
 VALID_OPTIONS = "-lst1hrafR"
 
 
 # api-endpoint
-URL1 = "http://127.0.0.1:5000/execute"
-URL2 = "http://127.0.0.1:5000/shutdown"
+SERVER_URL = "127.0.0.1:5000"
+URL1 = "http://%s/execute" % SERVER_URL
+URL2 = "http://%s/shutdown" % SERVER_URL
 
 
-print("*** ls command options accepted", VALID_OPTIONS)
-print("*** commands accepted",  URL1, URL2)
-
-
-
-
-
+# variant from code snippet from internet
 def make_request(cmd="ls", path="", options="", url=URL1, header=True, debug=False):
     # defining a params dict for the parameters to be sent to the API
     if header:
@@ -55,6 +52,7 @@ def make_request(cmd="ls", path="", options="", url=URL1, header=True, debug=Fal
     return None
 
 
+
 def shutdown_request():
     # defining a params dict for the parameters to be sent to the API
     print("\n" * 3 + "-" * 32)
@@ -88,61 +86,115 @@ def shutdown_request():
 
 
 
-# default request
-make_request()
 
-# current directory
-make_request("ls", ".")
 
-# empty valid directory
-make_request("ls", "./OLD")
 
-# regular expression directory
-make_request("ls", "*.py", options="-h -l -tr -a -s")
-make_request("ls", path="*.py", options="-h -l -tr -a -s")
-make_request(cmd="ls", path="*.py", options="-h -l -tr -a -s")
-make_request(cmd="ls", path="*.py", options="-lh -tra -s")
 
-# root directory
-make_request("ls", "/")
-
-# upward directory
-make_request("ls", "./..")
-
-# invalid cmd
-make_request("kls", "./..")
-
-# invalid cmd
-make_request("lsls", ".")
-
-# suspicious escalation upward
-make_request("ls", "./../..")
-
-# suspicious string
-make_request("ls", "./../..dasdkas;lkd;aslkdakr, eval('1'),-304923d;lskadas;m42m,.m13120")
-
-# sudden load
-for i in range(1000):
-    print(i, end="--> ")
-    make_request(cmd="ls", path=".", options="-h", header=False)
-
-    # test the client respecting load balance
-    if i in (300, 500, 700):
-        time.sleep(4)
-
-    if i == 900:
-        # shutdown request
-        shutdown_request()
 
 
 
 
 class TestClientServer(unittest.TestCase):
     def test_ls01(self):
-        self.assertEqual(make_request(cmd="ls", path=".", options="-h", header=False)
+        self.assertTrue("TEST" in make_request(cmd="ls", path=".", options="-h", header=False)['out'])
+        return
+
+    def test_shutdown(self):
+        self.assertTrue("OK" in shutdown_request()['out'])
+        self.assertTrue(make_request(cmd="ls", path=".", options="-h", header=False) is None)
+        return
+
+
+def test_functional_basics():
+    # default request
+    make_request()
+
+    # current directory
+    make_request("ls", ".")
+
+    # empty valid directory
+    make_request("ls", "./OLD")
+
+    # regular expression directory
+    make_request("ls", "*.py", options="")
+    make_request("ls", path="*.py", options="-hltras")
+
+    # options directory
+    make_request(cmd="ls", path="*.py", options="-h -l -tr -a -s")
+    make_request(cmd="ls", path="*.py", options="-lh -tra -s")
+
+    return
+
+
+def test_path_basics():
+    # root directory
+    make_request("ls", "/")
+
+    # upward directory
+    make_request("ls", "./..")
+
+    return
+
+
+def test_bad_input_basics():
+    # invalid cmd
+    make_request("", "./..")
+    make_request("-hshts", "ls", "./..")
+
+    # invalid cmd
+    make_request("kls", "./..")
+
+    # invalid cmd
+    make_request("lsls", ".")
+
+    # suspicious escalation upward
+    make_request("ls", "./../..")
+
+    # suspicious string
+    make_request("ls", "./../..dasdkas;lkd;aslkdakr, eval('1'),-304923d;lskadas;m42m,.m13120")
+
+    return
+
+
+# sudden load
+def test_loadsurge_basics(n, stops=None, timeout=5):
+    if stops is None:
+        stops = list(range(100, n, 300))
+
+    for i in range(n):
+        print(i, end="--> ")
+        make_request(cmd="ls", path=".", options="-h", header=False)
+
+        # test the client respecting load balance
+        if i in stops:
+            time.sleep(timeout)
+
+    return
+
+
+
+
 
 
 if __name__ == '__main__':
+    parser = argparse.ArgumentParser()
+    args = parser.parse_args()
+
+    print("*** rest api server url ", SERVER_URL)
+    print("*** ls command options accepted", VALID_OPTIONS)
+    print("*** commands accepted",  URL1, URL2)
+
+    test_functional_basics()
+
+    test_path_basics()
+
+    test_bad_input_basics()
+
+    test_loadsurge_basics(1000)
+
     unittest.main()
+
+    # shutdown_request()
+
 
 
