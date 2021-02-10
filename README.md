@@ -53,3 +53,14 @@ DESCRIPTION
 
 
 
+# ARCHITECTURAL NOTES
+    1) server entry point providing client api : execute and shutdown
+       execute commands dispatched into asyncio coroutine
+       every 10 of such request is injected an anomalous large delay  
+    2) command validator object analyzes input command for exploits and correctness 
+    3) cache/history object keeps track of request load per window time, at this time, on ip basis
+    4) pending_request object keeps track of currently being processed objects
+    5) shutdown object triggers event signal to disable serving new requests 
+
+# CONTACT
+    nelsonr@umich.edu
