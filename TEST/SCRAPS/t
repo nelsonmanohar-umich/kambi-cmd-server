@@ -1,0 +1,22 @@
+    assert "ls" in cmd, "ls is the only allowed command"
+    try:
+        cmdstr = "%s %s %s" % ("ls ", options, path)
+        cmdstr = '/bin/bash --restricted --norc --noprofile -c \" %s "' % cmdstr
+    except:
+        cmdstr = "%s %s %s" % ("/bin/ls ", options, path)
+        cmdstr = '/bin/bash --norc --noprofile -c \" %s "' % cmdstr
+    print("EXECUTING", cmdstr)
+    proc = await asyncio.create_subprocess_shell(
+        cmdstr,
+        stdout=asyncio.subprocess.PIPE,
+        stderr=asyncio.subprocess.PIPE)
+
+    stdout, stderr = await proc.communicate()
+
+    time.sleep(random.randint(0,3))
+
+    print(f'[{cmd!r} exited with {proc.returncode}]')
+    if stdout: print(f'[stdout]\n{stdout.decode()}')
+    if stderr: print(f'[stderr]\n{stderr.decode()}')
+
+    ret, out, err = proc.returncode, stdout, stderr
